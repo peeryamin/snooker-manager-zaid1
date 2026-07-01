@@ -5,7 +5,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   const { customer_name, items, amount } = await req.json();
   const sql = getSql();
-
   const [row] = await sql`
     UPDATE food_orders
     SET customer_name = COALESCE(${customer_name || null}, customer_name),

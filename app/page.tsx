@@ -14,19 +14,13 @@ const COLLECTION_PASSWORD = "Zaid990340";
 type Tab = "sessions" | "pending" | "history" | "food" | "admin";
 
 interface FoodOrder {
-  id: number;
-  customer_name: string;
-  items: string;
-  amount: number;
-  created_at: string;
+  id: number; customer_name: string; items: string; amount: number;
+  status: string; created_at: string;
 }
 
 interface Stats {
-  total: number;
-  session_revenue: number;
-  food_revenue: number;
-  session_count: number;
-  food_order_count: number;
+  total: number; session_revenue: number; food_revenue: number;
+  session_count: number; food_order_count: number;
 }
 
 function CollectionWidget() {
@@ -39,10 +33,7 @@ function CollectionWidget() {
 
   async function handleReveal() {
     setError("");
-    if (password !== COLLECTION_PASSWORD) {
-      setError("Incorrect password");
-      return;
-    }
+    if (password !== COLLECTION_PASSWORD) { setError("Incorrect password"); return; }
     setLoading(true);
     const res = await fetch("/api/stats/today");
     const data = await res.json();
@@ -54,70 +45,47 @@ function CollectionWidget() {
   }
 
   return (
-    <div className="table-felt rounded-xl p-4 flex flex-col items-center gap-2 border border-[var(--brass-500)]/20">
-      <p className="font-mono-score text-[10px] tracking-widest text-[var(--brass-400)] uppercase">Today&apos;s Collection</p>
-
+    <div className="table-felt rounded-xl px-4 py-3 flex flex-col items-center gap-1.5 border border-[var(--brass-500)]/20 min-w-[160px]">
+      <p className="font-mono-score text-[9px] tracking-widest text-[var(--brass-400)] uppercase">Today&apos;s Collection</p>
       {!revealed ? (
         <>
-          <div className="flex gap-1 text-2xl select-none" onClick={() => setShowPrompt(true)} style={{ cursor: "pointer" }}>
+          <div className="flex gap-0.5 text-xl cursor-pointer" onClick={() => setShowPrompt(true)}>
             {"★★★★★".split("").map((s, i) => (
               <span key={i} className="text-[var(--brass-500)] hover:text-[var(--brass-400)] transition-colors">{s}</span>
             ))}
           </div>
           {!showPrompt ? (
             <button onClick={() => setShowPrompt(true)}
-              className="text-[10px] text-[var(--brass-400)]/70 hover:text-[var(--brass-400)] transition-colors underline underline-offset-2">
-              View today&apos;s collection
+              className="text-[9px] text-[var(--brass-400)]/60 hover:text-[var(--brass-400)] transition-colors underline underline-offset-2">
+              View collection
             </button>
           ) : (
-            <div className="w-full space-y-2 mt-1">
-              <input
-                type="password"
-                className="w-full text-sm"
-                placeholder="Enter password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleReveal()}
-                autoFocus
-              />
-              {error && <p className="text-xs text-[#e69aa6]">{error}</p>}
-              <div className="flex gap-2">
+            <div className="w-full space-y-1.5 mt-1">
+              <input type="password" className="w-full text-xs py-1" placeholder="Password"
+                value={password} onChange={e => setPassword(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleReveal()} autoFocus />
+              {error && <p className="text-[10px] text-[#e69aa6]">{error}</p>}
+              <div className="flex gap-1.5">
                 <button onClick={() => { setShowPrompt(false); setPassword(""); setError(""); }}
-                  className="flex-1 rounded-md py-1 text-xs border border-white/10 text-[var(--cream-300)] hover:bg-white/5">
-                  Cancel
-                </button>
+                  className="flex-1 rounded py-1 text-[10px] border border-white/10 text-[var(--cream-300)] hover:bg-white/5">Cancel</button>
                 <button onClick={handleReveal} disabled={loading}
-                  className="flex-1 rounded-md py-1 text-xs bg-[var(--brass-500)] text-[var(--ink)] font-semibold hover:bg-[var(--brass-400)] disabled:opacity-60">
+                  className="flex-1 rounded py-1 text-[10px] bg-[var(--brass-500)] text-[var(--ink)] font-semibold disabled:opacity-60">
                   {loading ? "…" : "View"}
                 </button>
               </div>
             </div>
           )}
         </>
-      ) : (
-        stats && (
-          <div className="w-full space-y-2">
-            <div className="text-center">
-              <p className="font-mono-score text-3xl font-bold text-[var(--brass-400)]">₹{stats.total.toFixed(0)}</p>
-              <p className="text-xs text-[var(--cream-300)] mt-0.5">Total collected today</p>
-            </div>
-            <div className="brass-line" />
-            <div className="grid grid-cols-2 gap-2 text-center text-xs">
-              <div>
-                <p className="font-mono-score text-sm text-[var(--cream-100)]">₹{stats.session_revenue.toFixed(0)}</p>
-                <p className="text-[var(--cream-300)]/60">{stats.session_count} sessions</p>
-              </div>
-              <div>
-                <p className="font-mono-score text-sm text-[var(--cream-100)]">₹{stats.food_revenue.toFixed(0)}</p>
-                <p className="text-[var(--cream-300)]/60">{stats.food_order_count} food orders</p>
-              </div>
-            </div>
-            <button onClick={() => { setRevealed(false); setStats(null); }}
-              className="w-full text-[10px] text-[var(--cream-300)]/40 hover:text-[var(--cream-300)]/70 transition-colors">
-              Hide
-            </button>
+      ) : stats && (
+        <div className="w-full space-y-1 text-center">
+          <p className="font-mono-score text-2xl font-bold text-[var(--brass-400)]">₹{stats.total.toFixed(0)}</p>
+          <div className="flex gap-3 justify-center text-[10px] text-[var(--cream-300)]/60">
+            <span>Sessions ₹{stats.session_revenue.toFixed(0)}</span>
+            <span>Food ₹{stats.food_revenue.toFixed(0)}</span>
           </div>
-        )
+          <button onClick={() => { setRevealed(false); setStats(null); }}
+            className="text-[9px] text-[var(--cream-300)]/30 hover:text-[var(--cream-300)]/60 transition-colors">Hide</button>
+        </div>
       )}
     </div>
   );
@@ -129,6 +97,7 @@ export default function Dashboard() {
   const [activeSessions, setActiveSessions] = useState<SessionRow[]>([]);
   const [pendingBills, setPendingBills] = useState<SessionRow[]>([]);
   const [history, setHistory] = useState<SessionRow[]>([]);
+  const [foodHistory, setFoodHistory] = useState<FoodOrder[]>([]);
   const [foodOrders, setFoodOrders] = useState<FoodOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -141,14 +110,12 @@ export default function Dashboard() {
     ]);
     if (activeRes.status === 401) { router.push("/login"); return; }
     const [activeData, pendingData, historyData, foodData] = await Promise.all([
-      activeRes.json(),
-      pendingRes.json(),
-      historyRes.json(),
-      foodRes.json(),
+      activeRes.json(), pendingRes.json(), historyRes.json(), foodRes.json(),
     ]);
     setActiveSessions(activeData.sessions || []);
     setPendingBills(pendingData.bills || []);
     setHistory(historyData.history || []);
+    setFoodHistory(historyData.food_history || []);
     setFoodOrders(foodData.orders || []);
     setLoading(false);
   }, [router]);
@@ -161,12 +128,13 @@ export default function Dashboard() {
 
   const table1Session = activeSessions.find(s => s.table_no === 1) || null;
   const table2Session = activeSessions.find(s => s.table_no === 2) || null;
+  const pendingFoodCount = foodOrders.filter(o => o.status === "pending").length;
 
   const tabs: { id: Tab; label: string; badge?: number }[] = [
     { id: "sessions", label: "Tables" },
     { id: "pending", label: "Pending Bills", badge: pendingBills.length || undefined },
-    { id: "history", label: "History", badge: history.length || undefined },
-    { id: "food", label: "Food Orders", badge: foodOrders.length || undefined },
+    { id: "history", label: "History", badge: (history.length + foodHistory.length) || undefined },
+    { id: "food", label: "Food Orders", badge: pendingFoodCount || undefined },
     { id: "admin", label: "Admin" },
   ];
 
@@ -175,14 +143,14 @@ export default function Dashboard() {
       {/* Header */}
       <header className="flex items-center justify-between px-5 py-3 border-b border-[var(--brass-500)]/15">
         <div>
-          <p className="font-mono-score text-[9px] tracking-[0.3em] text-[var(--brass-400)] uppercase">Cue &amp; Ledger</p>
-          <h1 className="font-display text-lg font-bold text-[var(--cream-100)]">Snooker Parlor</h1>
+          <p className="font-mono-score text-[9px] tracking-[0.25em] text-[var(--brass-400)] uppercase">Black Racks Snooker Club</p>
+          <h1 className="font-display text-lg font-bold text-[var(--cream-100)] leading-tight">Welcome, Zaid</h1>
         </div>
         <CollectionWidget />
       </header>
 
       {/* Tabs */}
-      <nav className="flex border-b border-[var(--brass-500)]/15 px-3 overflow-x-auto gap-0.5">
+      <nav className="flex border-b border-[var(--brass-500)]/15 px-2 overflow-x-auto">
         {tabs.map(t => (
           <button key={t.id} onClick={() => setActiveTab(t.id)}
             className={`flex items-center gap-1.5 px-3 py-3 text-xs whitespace-nowrap border-b-2 transition-colors ${
@@ -203,15 +171,22 @@ export default function Dashboard() {
       {/* Content */}
       <main className="flex-1 p-4 md:p-6 max-w-5xl mx-auto w-full">
         {loading ? (
-          <div className="flex items-center justify-center py-24">
-            <p className="text-[var(--brass-400)] font-mono-score text-sm animate-pulse">Loading…</p>
+          <div className="flex flex-col items-center justify-center py-24 gap-3">
+            <span className="text-3xl animate-spin">🎱</span>
+            <p className="text-[var(--brass-400)] font-mono-score text-sm">Loading…</p>
           </div>
         ) : (
           <>
             {activeTab === "sessions" && (
-              <div className="grid sm:grid-cols-2 gap-5">
-                <TableCard tableNo={1} session={table1Session} onRefresh={fetchAll} />
-                <TableCard tableNo={2} session={table2Session} onRefresh={fetchAll} />
+              <div>
+                <div className="grid sm:grid-cols-2 gap-5">
+                  <TableCard tableNo={1} session={table1Session} onRefresh={fetchAll} />
+                  <TableCard tableNo={2} session={table2Session} onRefresh={fetchAll} />
+                </div>
+                {/* Bottom watermark */}
+                <p className="text-center text-[10px] text-[var(--cream-300)]/15 mt-6 tracking-widest uppercase">
+                  Black Racks Snooker Club · Est. by Zaid
+                </p>
               </div>
             )}
 
@@ -231,18 +206,18 @@ export default function Dashboard() {
                   <h2 className="font-display text-lg font-bold">Today&apos;s History</h2>
                   <div className="brass-line flex-1" />
                 </div>
-                <HistoryPanel history={history} onRefresh={fetchAll} />
+                <HistoryPanel history={history} foodHistory={foodHistory} onRefresh={fetchAll} />
               </div>
             )}
 
             {activeTab === "food" && (
               <div>
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-3 mb-2">
                   <h2 className="font-display text-lg font-bold">Food-Only Orders</h2>
                   <div className="brass-line flex-1" />
                 </div>
-                <p className="text-sm text-[var(--cream-300)]/60 mb-4">
-                  For customers who eat but don&apos;t play. Bills go straight to history.
+                <p className="text-xs text-[var(--cream-300)]/50 mb-4">
+                  For customers who eat but don&apos;t play. Confirm to move to history.
                 </p>
                 <FoodOnlySection orders={foodOrders} onRefresh={fetchAll} />
               </div>
@@ -251,9 +226,12 @@ export default function Dashboard() {
             {activeTab === "admin" && (
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <h2 className="font-display text-lg font-bold">Admin</h2>
+                  <h2 className="font-display text-lg font-bold">Admin Panel</h2>
                   <div className="brass-line flex-1" />
                 </div>
+                <p className="text-xs text-[var(--cream-300)]/40 mb-4 font-mono-score tracking-wide">
+                  BLACK RACKS SNOOKER CLUB · OWNER: ZAID
+                </p>
                 <div className="table-felt rounded-xl p-5 max-w-sm">
                   <AdminPanel />
                 </div>
