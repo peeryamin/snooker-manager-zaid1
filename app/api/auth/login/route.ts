@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSessionCookie } from "@/lib/auth";
 
-const USERNAME = process.env.OWNER_USERNAME || "zaid";
-const PASSWORD = process.env.OWNER_PASSWORD || "Zaid990340";
-
 export async function POST(req: NextRequest) {
   const { username, password } = await req.json();
-  if (username === USERNAME && password === PASSWORD) {
+  if (username === "zaid" && password === "Zaid990340") {
     await createSessionCookie(username);
     return NextResponse.json({ ok: true });
   }
