@@ -21,6 +21,9 @@ const hourLabel = (h: number) => {
   return `${x}${s}`;
 };
 
+const TREND_MAX_PX = 110;
+const HOUR_MAX_PX = 90;
+
 export default function AnalyticsPanel() {
   const [range, setRange] = useState<Range>("today");
   const [data, setData] = useState<Analytics | null>(null);
@@ -85,11 +88,12 @@ export default function AnalyticsPanel() {
         {data.dailyRevenue.length === 0 ? (
           <p className="text-xs text-[var(--cream-300)]/40 py-6 text-center">No confirmed bills yet</p>
         ) : (
-          <div className="flex items-end gap-1.5 h-32">
+          <div className="flex items-end gap-1.5">
             {data.dailyRevenue.map((d) => (
               <div key={d.date} className="flex-1 flex flex-col items-center justify-end gap-1">
+                <span className="text-[9px] text-[var(--brass-400)]/70 font-mono-score">{rupee(d.revenue)}</span>
                 <div className="w-full rounded-t bg-[var(--brass-500)]/80"
-                  style={{ height: `${Math.max(4, (d.revenue / maxDaily) * 100)}%` }}
+                  style={{ height: `${Math.max(6, (d.revenue / maxDaily) * TREND_MAX_PX)}px` }}
                   title={`${d.date}: ${rupee(d.revenue)}`} />
                 <span className="text-[8px] text-[var(--cream-300)]/40">{d.date.slice(5)}</span>
               </div>
@@ -100,11 +104,11 @@ export default function AnalyticsPanel() {
 
       <div className="table-felt rounded-xl p-4 border border-[var(--brass-500)]/20">
         <p className="text-xs font-semibold text-[var(--cream-300)] mb-3 uppercase tracking-wider">Hourly Activity</p>
-        <div className="flex items-end gap-1 h-28">
+        <div className="flex items-end gap-1">
           {hrs.map((h) => (
             <div key={h.hour} className="flex-1 flex flex-col items-center justify-end gap-1">
               <div className="w-full rounded-t bg-[var(--cream-300)]/50"
-                style={{ height: `${Math.max(3, (h.count / maxHour) * 100)}%` }}
+                style={{ height: `${Math.max(3, (h.count / maxHour) * HOUR_MAX_PX)}px` }}
                 title={`${hourLabel(h.hour)}: ${h.count} sessions`} />
               <span className="text-[7px] text-[var(--cream-300)]/40">{h.hour}</span>
             </div>
