@@ -43,8 +43,14 @@ export async function GET(req: NextRequest) {
   const table1 = { revenue: 0, sessions: 0 };
   const table2 = { revenue: 0, sessions: 0 };
   const hourly = new Array(24).fill(0);
-  const dailyMap = new Map<string, number>();
+  const dailyMap = new Map<string, { pool: number; food: number }>();
   const playerMap = new Map<string, { name: string; games: number; wins: number; losses: number; spent: number }>();
+
+  const dayBucket = (key: string) => {
+    let b = dailyMap.get(key);
+    if (!b) { b = { pool: 0, food: 0 }; dailyMap.set(key, b); }
+    return b;
+  };
 
   const addPlayer = (name: string, spent: number, lost: boolean) => {
     const key = (name || "").toLowerCase().trim();
@@ -73,8 +79,10 @@ export async function GET(req: NextRequest) {
     else if (s.table_no === 2) { table2.revenue += total; table2.sessions++; }
 
     hourly[new Date(s.start_time).getHours()]++;
-    const dayKey = new Date(s.start_time).toISOString().slice(0, 10);
-    dailyMap.set(dayKey, (dailyMap.get(dayKey) || 0) + total);
+
+    const b = dayBucket(new Date(s.start_time).toISOString().slice(0, 10));
+    b.pool += charge;
+    b.food += food1 + food2;
 
     addPlayer(s.player1_name, (s.loser === "player1" ? charge : 0) + food1, s.loser === "player1");
     addPlayer(s.player2_name, (s.loser === "player2" ? charge : 0) + food2, s.loser === "player2");
@@ -84,8 +92,7 @@ export async function GET(req: NextRequest) {
   for (const f of foodOrders) {
     const amt = Number(f.amount) || 0;
     foodOnlyRevenue += amt;
-    const dayKey = new Date(f.created_at).toISOString().slice(0, 10);
-    dailyMap.set(dayKey, (dailyMap.get(dayKey) || 0) + amt);
+    dayBucket(new Date(f.created_at).toISOString().slice(0, 10)).food += amt;
   }
 
   const foodRevenue = sessionFoodRevenue + foodOnlyRevenue;
@@ -96,7 +103,8 @@ export async function GET(req: NextRequest) {
   const peakHourEntry = hourly.map((count, hour) => ({ hour, count }))
     .filter((h) => h.count > 0).sort((a, b) => b.count - a.count)[0];
   const dailyRevenue = Array.from(dailyMap.entries())
-    .map(([date, revenue]) => ({ date, revenue })).sort((a, b) => a.date.localeCompare(b.date));
+    .map(([date, v]) => ({ date, pool: v.pool, food: v.food }))
+    .sort((a, b) => a.date.localeCompare(b.date));
   const topPlayers = Array.from(playerMap.values())
     .sort((a, b) => b.games - a.games || b.spent - a.spent).slice(0, 10);
 

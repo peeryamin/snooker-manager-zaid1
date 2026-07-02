@@ -11,7 +11,7 @@ interface Analytics {
   table1: { revenue: number; sessions: number };
   table2: { revenue: number; sessions: number };
   hourlyDistribution: { hour: number; count: number }[];
-  dailyRevenue: { date: string; revenue: number }[];
+  dailyRevenue: { date: string; pool: number; food: number }[];
   topPlayers: { name: string; games: number; wins: number; losses: number; spent: number }[];
 }
 
@@ -47,7 +47,7 @@ export default function AnalyticsPanel() {
     );
   }
 
-  const maxDaily = Math.max(1, ...data.dailyRevenue.map((d) => d.revenue));
+  const maxDaily = Math.max(1, ...data.dailyRevenue.map((d) => d.pool + d.food));
   const hrs = data.hourlyDistribution.filter((h) => h.hour >= 8 && h.hour <= 23);
   const maxHour = Math.max(1, ...hrs.map((h) => h.count));
   const tblTotal = Math.max(1, data.table1.revenue + data.table2.revenue);
@@ -84,20 +84,33 @@ export default function AnalyticsPanel() {
       </div>
 
       <div className="table-felt rounded-xl p-4 border border-[var(--brass-500)]/20">
-        <p className="text-xs font-semibold text-[var(--cream-300)] mb-3 uppercase tracking-wider">Revenue Trend</p>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-semibold text-[var(--cream-300)] uppercase tracking-wider">Revenue Trend</p>
+          <div className="flex items-center gap-3 text-[10px] text-[var(--cream-300)]/70">
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-[var(--brass-500)]/80 inline-block" /> Pool</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-500/70 inline-block" /> Food</span>
+          </div>
+        </div>
         {data.dailyRevenue.length === 0 ? (
           <p className="text-xs text-[var(--cream-300)]/40 py-6 text-center">No confirmed bills yet</p>
         ) : (
           <div className="flex items-end gap-1.5">
-            {data.dailyRevenue.map((d) => (
-              <div key={d.date} className="flex-1 flex flex-col items-center justify-end gap-1">
-                <span className="text-[9px] text-[var(--brass-400)]/70 font-mono-score">{rupee(d.revenue)}</span>
-                <div className="w-full rounded-t bg-[var(--brass-500)]/80"
-                  style={{ height: `${Math.max(6, (d.revenue / maxDaily) * TREND_MAX_PX)}px` }}
-                  title={`${d.date}: ${rupee(d.revenue)}`} />
-                <span className="text-[8px] text-[var(--cream-300)]/40">{d.date.slice(5)}</span>
-              </div>
-            ))}
+            {data.dailyRevenue.map((d) => {
+              const poolPx = (d.pool / maxDaily) * TREND_MAX_PX;
+              const foodPx = (d.food / maxDaily) * TREND_MAX_PX;
+              return (
+                <div key={d.date} className="flex-1 flex flex-col items-center justify-end gap-1">
+                  <span className="text-[9px] text-[var(--brass-400)]/70 font-mono-score">{rupee(d.pool + d.food)}</span>
+                  <div className="w-full flex flex-col justify-end"
+                    title={`${d.date} — Pool ${rupee(d.pool)} · Food ${rupee(d.food)}`}
+                    style={{ height: `${Math.max(6, poolPx + foodPx)}px` }}>
+                    {d.food > 0 && <div className="w-full rounded-t bg-emerald-500/70" style={{ height: `${Math.max(2, foodPx)}px` }} />}
+                    {d.pool > 0 && <div className={`w-full bg-[var(--brass-500)]/80 ${d.food > 0 ? "" : "rounded-t"}`} style={{ height: `${Math.max(2, poolPx)}px` }} />}
+                  </div>
+                  <span className="text-[8px] text-[var(--cream-300)]/40">{d.date.slice(5)}</span>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -110,7 +123,7 @@ export default function AnalyticsPanel() {
               <div className="w-full rounded-t bg-[var(--cream-300)]/50"
                 style={{ height: `${Math.max(3, (h.count / maxHour) * HOUR_MAX_PX)}px` }}
                 title={`${hourLabel(h.hour)}: ${h.count} sessions`} />
-              <span className="text-[7px] text-[var(--cream-300)]/40">{h.hour}</span>
+              <span className="text-[7px] text-[var(--cream-300)]/40 whitespace-nowrap">{hourLabel(h.hour)}</span>
             </div>
           ))}
         </div>
@@ -128,8 +141,8 @@ export default function AnalyticsPanel() {
         </div>
         <div className="brass-line my-3" />
         <div className="flex justify-between text-[11px] text-[var(--cream-300)]/60">
-          <span>Table charges: {rupee(data.tableRevenue)}</span>
-          <span>Food: {rupee(data.foodRevenue)}</span>
+          <span>Pool money: {rupee(data.tableRevenue)}</span>
+          <span>Food money: {rupee(data.foodRevenue)}</span>
         </div>
       </div>
 
