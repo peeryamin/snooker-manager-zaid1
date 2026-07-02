@@ -8,10 +8,11 @@ import PendingBills from "@/components/PendingBills";
 import HistoryPanel from "@/components/HistoryPanel";
 import AdminPanel from "@/components/AdminPanel";
 import FoodOnlySection from "@/components/FoodOnlySection";
+import AnalyticsPanel from "@/components/AnalyticsPanel";
 
 const COLLECTION_PASSWORD = "Zaid990340";
 
-type Tab = "sessions" | "pending" | "history" | "food" | "admin";
+type Tab = "sessions" | "dashboard" | "pending" | "history" | "food" | "admin";
 
 interface FoodOrder {
   id: number; customer_name: string; items: string; amount: number;
@@ -132,6 +133,7 @@ export default function Dashboard() {
 
   const tabs: { id: Tab; label: string; badge?: number }[] = [
     { id: "sessions", label: "Tables" },
+    { id: "dashboard", label: "📊 Dashboard" },
     { id: "pending", label: "Pending Bills", badge: pendingBills.length || undefined },
     { id: "history", label: "History", badge: (history.length + foodHistory.length) || undefined },
     { id: "food", label: "Food Orders", badge: pendingFoodCount || undefined },
@@ -187,6 +189,16 @@ export default function Dashboard() {
                 <p className="text-center text-[10px] text-[var(--cream-300)]/15 mt-6 tracking-widest uppercase">
                   Black Racks Snooker Club · Est. by Zaid
                 </p>
+              </div>
+            )}
+
+            {activeTab === "dashboard" && (
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="font-display text-lg font-bold">Dashboard Analytics</h2>
+                  <div className="brass-line flex-1" />
+                </div>
+                <AnalyticsPanel />
               </div>
             )}
 
