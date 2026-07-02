@@ -125,7 +125,7 @@ export default function FoodOnlySection({ orders, onRefresh }: { orders: FoodOrd
             <p className="text-sm font-semibold text-[var(--cream-100)] truncate">{o.customer_name}</p>
             {o.items && <p className="text-xs text-[var(--cream-300)]/60 truncate mt-0.5">{o.items}</p>}
             <p className="text-[10px] text-[var(--cream-300)]/40 mt-0.5">
-              {new Date(o.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+              {new Date(o.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
             </p>
           </div>
           <div className="flex flex-col items-end gap-1 flex-shrink-0">

@@ -84,7 +84,7 @@ function SessionRow_({ s, onRefresh }: { s: SessionRow; onRefresh: () => void })
   const dur = s.end_time
     ? Math.floor((new Date(s.end_time).getTime() - new Date(s.start_time).getTime()) / 1000 - (s.paused_seconds || 0))
     : 0;
-  const timeStr = new Date(s.start_time).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+  const timeStr = new Date(s.start_time).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
 
   async function handleDelete() {
     if (!confirm(`Delete session #${s.id}? Cannot be undone.`)) return;
@@ -104,7 +104,6 @@ function SessionRow_({ s, onRefresh }: { s: SessionRow; onRefresh: () => void })
           </div>
           <div className="flex items-center gap-1.5">
             <span className="font-mono-score text-xs text-[var(--brass-400)]">₹{(tableCharge+food1+food2).toFixed(0)}</span>
-            {/* Edit button — clearly visible */}
             <button onClick={() => setShowEdit(true)}
               className="text-xs px-2.5 py-1 rounded-md bg-[var(--brass-500)]/20 border border-[var(--brass-500)]/50 text-[var(--brass-400)] hover:bg-[var(--brass-500)]/40 hover:text-[var(--brass-400)] font-semibold transition-colors">
               Edit
@@ -163,10 +162,15 @@ function FoodRow({ o, onRefresh }: { o: FoodOrder; onRefresh: () => void }) {
 export default function HistoryPanel({ history, foodHistory, onRefresh }: {
   history: SessionRow[]; foodHistory: FoodOrder[]; onRefresh: () => void;
 }) {
-  const sessionRevenue = history.reduce((sum, s) =>
-    sum + Number(s.table_charge||0) + Number(s.food_charge_player1||0) + Number(s.food_charge_player2||0), 0);
-  const foodRevenue = foodHistory.reduce((sum, f) => sum + Number(f.amount||0), 0);
-  const total = sessionRevenue + foodRevenue;
+  // Pool money = table charges from games (money earned from the tables)
+  const poolMoney = history.reduce((sum, s) => sum + Number(s.table_charge || 0), 0);
+  // Food money bought by players during their game
+  const playerFood = history.reduce((sum, s) =>
+    sum + Number(s.food_charge_player1 || 0) + Number(s.food_charge_player2 || 0), 0);
+  // Food money from walk-in food-only customers
+  const foodOnlyMoney = foodHistory.reduce((sum, f) => sum + Number(f.amount || 0), 0);
+  const foodMoney = playerFood + foodOnlyMoney;
+  const total = poolMoney + foodMoney;
 
   if (history.length === 0 && foodHistory.length === 0) {
     return <div className="text-center py-10 text-[var(--cream-300)]/40 text-sm">No confirmed sessions yet today</div>;
@@ -174,19 +178,26 @@ export default function HistoryPanel({ history, foodHistory, onRefresh }: {
 
   return (
     <div className="space-y-3">
-      {/* Summary */}
-      <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-[var(--felt-800)]/50 border border-[var(--brass-500)]/20">
+      {/* Summary — Pool vs Food */}
+      <div className="p-3 rounded-xl bg-[var(--felt-800)]/50 border border-[var(--brass-500)]/20 space-y-3">
         <div className="text-center">
-          <p className="font-mono-score text-lg font-bold text-[var(--brass-400)]">₹{total.toFixed(0)}</p>
-          <p className="text-xs text-[var(--cream-300)]">Day total</p>
+          <p className="font-mono-score text-2xl font-bold text-[var(--brass-400)]">₹{total.toFixed(0)}</p>
+          <p className="text-[10px] text-[var(--cream-300)]/60 uppercase tracking-widest">Day Total</p>
         </div>
-        <div className="text-center">
-          <p className="font-mono-score text-lg font-bold text-[var(--brass-400)]">{history.length}</p>
-          <p className="text-xs text-[var(--cream-300)]">Games</p>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="text-center rounded-lg bg-[var(--felt-800)]/60 border border-[var(--brass-500)]/15 py-2">
+            <p className="font-mono-score text-lg font-bold text-[var(--cream-100)]">₹{poolMoney.toFixed(0)}</p>
+            <p className="text-[10px] text-[var(--cream-300)]/60 uppercase tracking-wider">Pool Money</p>
+          </div>
+          <div className="text-center rounded-lg bg-[var(--felt-800)]/60 border border-[var(--brass-500)]/15 py-2">
+            <p className="font-mono-score text-lg font-bold text-[var(--cream-100)]">₹{foodMoney.toFixed(0)}</p>
+            <p className="text-[10px] text-[var(--cream-300)]/60 uppercase tracking-wider">Food Money</p>
+          </div>
         </div>
-        <div className="text-center">
-          <p className="font-mono-score text-lg font-bold text-[var(--brass-400)]">{foodHistory.length}</p>
-          <p className="text-xs text-[var(--cream-300)]">Food orders</p>
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-[10px] text-[var(--cream-300)]/50">
+          <span>{history.length} games</span>
+          <span>Player food ₹{playerFood.toFixed(0)}</span>
+          <span>{foodHistory.length} food-only ₹{foodOnlyMoney.toFixed(0)}</span>
         </div>
       </div>
 
