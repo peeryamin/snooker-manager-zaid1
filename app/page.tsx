@@ -133,7 +133,7 @@ export default function Dashboard() {
 
   const tabs: { id: Tab; label: string; badge?: number }[] = [
     { id: "sessions", label: "Tables" },
-    { id: "dashboard", label: "📊 Dashboard" },
+    { id: "dashboard", label: "Dashboard" },
     { id: "pending", label: "Pending Bills", badge: pendingBills.length || undefined },
     { id: "history", label: "History", badge: (history.length + foodHistory.length) || undefined },
     { id: "food", label: "Food Orders", badge: pendingFoodCount || undefined },
