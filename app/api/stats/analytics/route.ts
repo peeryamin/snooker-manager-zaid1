@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSql } from "@/lib/db";
 
+const TZ = "Asia/Kolkata"; // parlor local timezone (IST)
+
+// Build hour (0-23) and day (YYYY-MM-DD) in the parlor's local timezone
+const hourFmt = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", hour12: false });
+const dayFmt = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" });
+const localHour = (ts: string) => Number(hourFmt.format(new Date(ts))) % 24;
+const localDay = (ts: string) => dayFmt.format(new Date(ts));
+
 // GET /api/stats/analytics?range=today|week|month
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -13,30 +21,34 @@ export async function GET(req: NextRequest) {
   if (range === "week") {
     sessions = (await sql`
       SELECT * FROM sessions WHERE status = 'confirmed'
-        AND start_time >= (CURRENT_DATE - INTERVAL '6 days')
-        AND start_time < (CURRENT_DATE + INTERVAL '1 day') ORDER BY start_time ASC`) as any[];
+        AND (start_time AT TIME ZONE 'Asia/Kolkata')::date >= ((now() AT TIME ZONE 'Asia/Kolkata')::date - INTERVAL '6 days')
+        AND (start_time AT TIME ZONE 'Asia/Kolkata')::date <= (now() AT TIME ZONE 'Asia/Kolkata')::date
+      ORDER BY start_time ASC`) as any[];
     foodOrders = (await sql`
       SELECT * FROM food_orders WHERE status = 'confirmed'
-        AND created_at >= (CURRENT_DATE - INTERVAL '6 days')
-        AND created_at < (CURRENT_DATE + INTERVAL '1 day') ORDER BY created_at ASC`) as any[];
+        AND (created_at AT TIME ZONE 'Asia/Kolkata')::date >= ((now() AT TIME ZONE 'Asia/Kolkata')::date - INTERVAL '6 days')
+        AND (created_at AT TIME ZONE 'Asia/Kolkata')::date <= (now() AT TIME ZONE 'Asia/Kolkata')::date
+      ORDER BY created_at ASC`) as any[];
   } else if (range === "month") {
     sessions = (await sql`
       SELECT * FROM sessions WHERE status = 'confirmed'
-        AND start_time >= (CURRENT_DATE - INTERVAL '29 days')
-        AND start_time < (CURRENT_DATE + INTERVAL '1 day') ORDER BY start_time ASC`) as any[];
+        AND (start_time AT TIME ZONE 'Asia/Kolkata')::date >= ((now() AT TIME ZONE 'Asia/Kolkata')::date - INTERVAL '29 days')
+        AND (start_time AT TIME ZONE 'Asia/Kolkata')::date <= (now() AT TIME ZONE 'Asia/Kolkata')::date
+      ORDER BY start_time ASC`) as any[];
     foodOrders = (await sql`
       SELECT * FROM food_orders WHERE status = 'confirmed'
-        AND created_at >= (CURRENT_DATE - INTERVAL '29 days')
-        AND created_at < (CURRENT_DATE + INTERVAL '1 day') ORDER BY created_at ASC`) as any[];
+        AND (created_at AT TIME ZONE 'Asia/Kolkata')::date >= ((now() AT TIME ZONE 'Asia/Kolkata')::date - INTERVAL '29 days')
+        AND (created_at AT TIME ZONE 'Asia/Kolkata')::date <= (now() AT TIME ZONE 'Asia/Kolkata')::date
+      ORDER BY created_at ASC`) as any[];
   } else {
     sessions = (await sql`
       SELECT * FROM sessions WHERE status = 'confirmed'
-        AND start_time >= CURRENT_DATE
-        AND start_time < (CURRENT_DATE + INTERVAL '1 day') ORDER BY start_time ASC`) as any[];
+        AND (start_time AT TIME ZONE 'Asia/Kolkata')::date = (now() AT TIME ZONE 'Asia/Kolkata')::date
+      ORDER BY start_time ASC`) as any[];
     foodOrders = (await sql`
       SELECT * FROM food_orders WHERE status = 'confirmed'
-        AND created_at >= CURRENT_DATE
-        AND created_at < (CURRENT_DATE + INTERVAL '1 day') ORDER BY created_at ASC`) as any[];
+        AND (created_at AT TIME ZONE 'Asia/Kolkata')::date = (now() AT TIME ZONE 'Asia/Kolkata')::date
+      ORDER BY created_at ASC`) as any[];
   }
 
   let tableRevenue = 0, sessionFoodRevenue = 0, totalDurationSec = 0;
@@ -78,9 +90,9 @@ export async function GET(req: NextRequest) {
     if (s.table_no === 1) { table1.revenue += total; table1.sessions++; }
     else if (s.table_no === 2) { table2.revenue += total; table2.sessions++; }
 
-    hourly[new Date(s.start_time).getHours()]++;
+    hourly[localHour(s.start_time)]++;
 
-    const b = dayBucket(new Date(s.start_time).toISOString().slice(0, 10));
+    const b = dayBucket(localDay(s.start_time));
     b.pool += charge;
     b.food += food1 + food2;
 
@@ -92,7 +104,7 @@ export async function GET(req: NextRequest) {
   for (const f of foodOrders) {
     const amt = Number(f.amount) || 0;
     foodOnlyRevenue += amt;
-    dayBucket(new Date(f.created_at).toISOString().slice(0, 10)).food += amt;
+    dayBucket(localDay(f.created_at)).food += amt;
   }
 
   const foodRevenue = sessionFoodRevenue + foodOnlyRevenue;
