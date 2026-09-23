@@ -11,6 +11,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (session.status !== "pending_confirmation") return NextResponse.json({ error: "Not pending" }, { status: 409 });
   const food1 = body.food_charge_player1 !== undefined ? Number(body.food_charge_player1) : Number(session.food_charge_player1);
   const food2 = body.food_charge_player2 !== undefined ? Number(body.food_charge_player2) : Number(session.food_charge_player2);
-  const row = (await sql`UPDATE sessions SET status='confirmed',confirmed_at=now(),food_charge_player1=${food1},food_charge_player2=${food2} WHERE id=${id} RETURNING *` as any[])[0];
+  const updateRows = await sql`UPDATE sessions SET status='confirmed',confirmed_at=now(),food_charge_player1=${food1},food_charge_player2=${food2} WHERE id=${id} RETURNING *` as any[];
+  const row = updateRows[0];
   return NextResponse.json({ session: row });
 }

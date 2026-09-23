@@ -8,11 +8,12 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   const session = rows[0];
   if (!session) return NextResponse.json({ error: "Session not found" }, { status: 404 });
   if (session.status !== "paused") return NextResponse.json({ error: "Session is not paused" }, { status: 409 });
-  const updated = (await sql`
+  const updatedRows = await sql`
     UPDATE sessions
     SET status='running',
         paused_seconds = paused_seconds + EXTRACT(EPOCH FROM (now() - pause_started_at))::INT,
         pause_started_at = NULL
-    WHERE id=${id} RETURNING *` as any[])[0];
+    WHERE id=${id} RETURNING *` as any[];
+  const updated = updatedRows[0];
   return NextResponse.json({ session: updated });
 }

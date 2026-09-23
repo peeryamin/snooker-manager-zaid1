@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
   const { customer_name, items, amount } = await req.json();
   if (!customer_name?.trim()) return NextResponse.json({ error: "Customer name required" }, { status: 400 });
   const sql = getSql();
-  const row = (await sql`INSERT INTO food_orders (customer_name,items,amount,status) VALUES (${customer_name.trim()},${items||""},${Number(amount)||0},'pending') RETURNING *` as any[])[0];
+  const insertRows = await sql`INSERT INTO food_orders (customer_name,items,amount,status) VALUES (${customer_name.trim()},${items||""},${Number(amount)||0},'pending') RETURNING *` as any[];
+  const row = insertRows[0];
   return NextResponse.json({ order: row });
 }

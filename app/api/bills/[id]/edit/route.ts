@@ -12,6 +12,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const food1 = body.food_charge_player1 !== undefined ? Number(body.food_charge_player1) : Number(session.food_charge_player1);
   const food2 = body.food_charge_player2 !== undefined ? Number(body.food_charge_player2) : Number(session.food_charge_player2);
   const tableCharge = body.table_charge !== undefined ? Number(body.table_charge) : Number(session.table_charge);
-  const row = (await sql`UPDATE sessions SET loser=${loser},food_charge_player1=${food1},food_charge_player2=${food2},table_charge=${tableCharge} WHERE id=${id} RETURNING *` as any[])[0];
+  const updateRows = await sql`UPDATE sessions SET loser=${loser},food_charge_player1=${food1},food_charge_player2=${food2},table_charge=${tableCharge} WHERE id=${id} RETURNING *` as any[];
+  const row = updateRows[0];
   return NextResponse.json({ session: row });
 }

@@ -5,7 +5,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   const { customer_name, items, amount } = await req.json();
   const sql = getSql();
-  const row = (await sql`UPDATE food_orders SET customer_name=COALESCE(${customer_name||null},customer_name), items=COALESCE(${items!==undefined?items:null},items), amount=COALESCE(${amount!==undefined?Number(amount):null},amount) WHERE id=${id} RETURNING *` as any[])[0];
+  const rows = await sql`UPDATE food_orders SET customer_name=COALESCE(${customer_name||null},customer_name), items=COALESCE(${items!==undefined?items:null},items), amount=COALESCE(${amount!==undefined?Number(amount):null},amount) WHERE id=${id} RETURNING *` as any[];
+  const row = rows[0];
   return NextResponse.json({ order: row });
 }
 
