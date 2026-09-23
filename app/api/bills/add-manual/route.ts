@@ -15,9 +15,7 @@ export async function POST(req: NextRequest) {
   const food2 = Number(food_charge_player2) || 0;
   const startTs = start_time ? new Date(start_time) : new Date();
   const endTs = new Date(startTs.getTime() + activeSeconds * 1000);
-  const row = (await sql`
-    INSERT INTO sessions (table_no,player1_name,player2_name,status,start_time,end_time,paused_seconds,table_charge,loser,food_charge_player1,food_charge_player2,confirmed_at)
-    VALUES (${table_no},${player1_name.trim()},${player2_name.trim()},'confirmed',${startTs.toISOString()},${endTs.toISOString()},0,${tableCharge},${loser},${food1},${food2},now())
-    RETURNING *` as any[])[0];
+  const rows = await sql`INSERT INTO sessions (table_no,player1_name,player2_name,status,start_time,end_time,paused_seconds,table_charge,loser,food_charge_player1,food_charge_player2,confirmed_at) VALUES (${table_no},${player1_name.trim()},${player2_name.trim()},'confirmed',${startTs.toISOString()},${endTs.toISOString()},0,${tableCharge},${loser},${food1},${food2},now()) RETURNING *` as any[];
+  const row = rows[0];
   return NextResponse.json({ session: row });
 }
